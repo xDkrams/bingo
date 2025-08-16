@@ -7,6 +7,7 @@ import domtoimage from "dom-to-image-more";
 const BingoCardDisplay = ({ cards }) => {
   const containerRef = useRef();
 
+  console.log("Requested cards:", cards.length);
   //   const exportPDF = async () => {
   //     const pdf = new jsPDF();
   //     const cardElements = containerRef.current.querySelectorAll(".bingo-card");
@@ -30,6 +31,27 @@ const BingoCardDisplay = ({ cards }) => {
   //   };
 
   const exportPDF = async () => {
+    // const pdf = new jsPDF();
+    // const cardElements = containerRef.current.querySelectorAll(".bingo-card");
+
+    // for (let i = 0; i < cardElements.length; i++) {
+    //   const dataUrl = await domtoimage.toPng(cardElements[i], {
+    //     quality: 1,
+    //     cacheBust: true,
+    //     bgcolor: "#ffffff",
+    //     width: cardElements[i].scrollWidth,
+    //     height: cardElements[i].scrollHeight,
+    //   });
+
+    //   const imgProps = pdf.getImageProperties(dataUrl);
+    //   const pdfWidth = pdf.internal.pageSize.getWidth();
+    //   const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+    //   if (i > 0) pdf.addPage();
+    //   pdf.addImage(dataUrl, "PNG", 0, 0, pdfWidth, pdfHeight);
+    // }
+
+    // pdf.save("bingo-cards.pdf");
     const pdf = new jsPDF();
     const cardElements = containerRef.current.querySelectorAll(".bingo-card");
 
@@ -42,12 +64,24 @@ const BingoCardDisplay = ({ cards }) => {
         height: cardElements[i].scrollHeight,
       });
 
-      const imgProps = pdf.getImageProperties(dataUrl);
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+
+      // ✅ Define fixed width for bingo card in PDF (make columns wider)
+      const cardWidth = pageWidth * 1.2; // 90% of page width
+      const cardHeight = cardWidth; // make it square (columns look even)
+
+      // Center the card in the page
+      const x = (pageWidth - cardWidth) / 2;
+      const y = (pageHeight - cardHeight) / 2;
 
       if (i > 0) pdf.addPage();
-      pdf.addImage(dataUrl, "PNG", 0, 0, pdfWidth, pdfHeight);
+      pdf.addImage(dataUrl, "PNG", x, y, cardWidth, cardHeight);
+
+      // ✅ Add control number (Upper Left Corner)
+      const controlNumber = `PCSA125-${String(i + 1).padStart(4, "0")}`;
+      pdf.setFontSize(12);
+      pdf.text(controlNumber, 10, 15); // (x, y) => 10 from left, 15 from top
     }
 
     pdf.save("bingo-cards.pdf");
